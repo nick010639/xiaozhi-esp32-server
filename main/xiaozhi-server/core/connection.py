@@ -1105,6 +1105,10 @@ class ConnectionHandler:
                 self.system_introduced_speakers.add(cs)
                 speaker_for_system = cs
 
+            llm_kwargs = {}
+            if self.llm.__class__.__module__.endswith(".hermes.hermes"):
+                llm_kwargs["device_id"] = self.device_id
+
             if self.intent_type == "function_call" and functions is not None:
                 # 使用支持functions的streaming接口
                 llm_responses = self.llm.response_with_functions(
@@ -1113,6 +1117,7 @@ class ConnectionHandler:
                         memory_str, self.config.get("voiceprint", {}), speaker_for_system
                     ),
                     functions=functions,
+                    **llm_kwargs,
                 )
             else:
                 llm_responses = self.llm.response(
@@ -1120,6 +1125,7 @@ class ConnectionHandler:
                     self.dialogue.get_llm_dialogue_with_memory(
                         memory_str, self.config.get("voiceprint", {}), speaker_for_system
                     ),
+                    **llm_kwargs,
                 )
         except Exception as e:
             self.logger.bind(tag=TAG).error(f"LLM 处理出错 {query}: {e}")

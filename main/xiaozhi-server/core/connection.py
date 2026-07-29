@@ -223,6 +223,9 @@ class ConnectionHandler:
             # 认证通过,继续处理
             self.websocket = ws
 
+            if self.server and self.device_id:
+                self.server.register_connection(self.device_id, self)
+
             # 检查是否来自MQTT连接
             request_path = ws.request.path
             self.conn_from_mqtt_gateway = request_path.endswith("?from=mqtt_gateway")
@@ -1640,6 +1643,9 @@ class ConnectionHandler:
         except Exception as e:
             self.logger.bind(tag=TAG).error(f"关闭连接时出错: {e}")
         finally:
+            if self.server and self.device_id:
+                self.server.unregister_connection(self.device_id, self)
+
             # 确保停止事件被设置
             if self.stop_event:
                 self.stop_event.set()

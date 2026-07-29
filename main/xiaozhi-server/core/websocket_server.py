@@ -44,6 +44,7 @@ class WebSocketServer:
         self.config = config
         self.logger = setup_logging(config)
         self.config_lock = asyncio.Lock()
+        self.active_connections = {}
         modules = initialize_modules(
             self.logger,
             self.config,
@@ -67,6 +68,26 @@ class WebSocketServer:
         secret_key = self.config["server"]["auth_key"]
         expire_seconds = auth_config.get("expire_seconds", None)
         self.auth = AuthManager(secret_key=secret_key, expire_seconds=expire_seconds)
+
+    def register_connection(self, device_id, handler):
+        """登记在线设备连接"""
+        if device_id:
+            self.active_connections[device_id] = handler
+            self.logger.bind(tag=TAG).info(
+                f"设备已登记在线: {device_id}，在线数量: {len(self.active_connections)}"
+            )
+
+    def unregister_connection(self, device_id, handler):
+        """注销已经断开的设备连接"""
+        if device_id and self.active_connections.get(device_id) is handler:
+            del self.active_connections[device_id]
+            self.logger.bind(tag=TAG).info(
+                f"设备已注销在线: {device_id}，在线数量: {len(self.active_connections)}"
+            )
+
+    def get_connection(self, device_id):
+        """获取指定设备的在线连接"""
+        return self.active_connections.get(device_id)
 
     async def start(self):
         server_config = self.config["server"]

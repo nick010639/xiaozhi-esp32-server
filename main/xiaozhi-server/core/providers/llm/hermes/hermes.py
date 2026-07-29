@@ -26,7 +26,7 @@ class LLMProvider(LLMProviderBase):
             self.base_url = config.get("base_url")
         else:
             self.base_url = config.get("url")
-        
+
         timeout_config = config.get("timeout")
         if isinstance(timeout_config, dict):
             # 细粒度超时配置
@@ -121,7 +121,7 @@ class LLMProvider(LLMProviderBase):
         responses = self.client.chat.completions.create(**request_params)
 
         is_active = True
-        try:            
+        try:
             for chunk in responses:
                 try:
                     delta = chunk.choices[0].delta if getattr(chunk, "choices", None) else None

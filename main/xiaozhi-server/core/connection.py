@@ -1712,6 +1712,11 @@ class ConnectionHandler:
         """检查连接超时"""
         try:
             while not self.stop_event.is_set():
+                # 桌面智能体模式下保留 WebSocket 长连接
+                if self.config.get("keep_device_connection_alive", False):
+                    await asyncio.sleep(10)
+                    continue
+
                 last_activity_time = self.last_activity_time
                 if self.need_bind:
                     last_activity_time = self.first_activity_time

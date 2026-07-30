@@ -59,6 +59,8 @@ log:
 delete_audio: true
 # 没有语音输入多久后断开连接(秒)，默认2分钟，即120秒
 close_connection_no_voice_time: 120
+# 是否保持设备 WebSocket 长连接，供外部 Agent 随时调用设备工具
+keep_device_connection_alive: false
 # TTS请求超时时间(秒)
 tts_timeout: 10
 # 工具调用超时时间(秒)

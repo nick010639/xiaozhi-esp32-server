@@ -96,5 +96,49 @@ async def get_device_status() -> dict[str, Any]:
     }
 
 
+@mcp.tool()
+async def set_volume(volume: int) -> dict[str, Any]:
+    """将当前桌面智能体的扬声器音量设置为 0 到 100。"""
+    if isinstance(volume, bool) or not isinstance(volume, int):
+        raise ValueError("volume 必须是 0 到 100 的整数")
+
+    if not 0 <= volume <= 100:
+        raise ValueError("volume 必须在 0 到 100 之间")
+
+    base_url, token = _load_internal_api_config()
+    device_id = _get_device_id()
+
+    payload = {
+        "device_id": device_id,
+        "tool_name": "self_audio_speaker_set_volume",
+        "arguments": {"volume": volume},
+    }
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        response = await client.post(
+            f"{base_url}/internal/device/call",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+        )
+
+    try:
+        response_data = response.json()
+    except ValueError as exc:
+        raise RuntimeError(
+            f"内部设备接口返回了无效 JSON，HTTP {response.status_code}"
+        ) from exc
+
+    if response.status_code != 200 or not response_data.get("success"):
+        error = response_data.get("error", "设备音量设置失败")
+        raise RuntimeError(f"{error}，HTTP {response.status_code}")
+
+    return {
+        "device_id": device_id,
+        "volume": volume,
+        "result": response_data.get("result"),
+        "action": response_data.get("action"),
+    }
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -139,48 +139,6 @@ async def set_volume(volume: int) -> dict[str, Any]:
         "action": response_data.get("action"),
     }
 
-@mcp.tool()
-async def set_brightness(brightness: int) -> dict[str, Any]:
-    """Set screen brightness from 60 to 100 for this hardware."""
-    if isinstance(brightness, bool) or not isinstance(brightness, int):
-        raise ValueError("brightness must be an integer from 60 to 100")
-
-    if not 60 <= brightness <= 100:
-        raise ValueError("brightness must be between 60 and 100")
-
-    base_url, token = _load_internal_api_config()
-    device_id = _get_device_id()
-
-    payload = {
-        "device_id": device_id,
-        "tool_name": "self_screen_set_brightness",
-        "arguments": {"brightness": brightness},
-    }
-
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        response = await client.post(
-            f"{base_url}/internal/device/call",
-            headers={"Authorization": f"Bearer {token}"},
-            json=payload,
-        )
-
-    try:
-        response_data = response.json()
-    except ValueError as exc:
-        raise RuntimeError(
-            f"Internal device API returned invalid JSON, HTTP {response.status_code}"
-        ) from exc
-
-    if response.status_code != 200 or not response_data.get("success"):
-        error = response_data.get("error", "Failed to set screen brightness")
-        raise RuntimeError(f"{error}, HTTP {response.status_code}")
-
-    return {
-        "device_id": device_id,
-        "brightness": brightness,
-        "result": response_data.get("result"),
-        "action": response_data.get("action"),
-    }
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
